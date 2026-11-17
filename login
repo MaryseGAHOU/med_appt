@@ -1,4 +1,4 @@
-StayHealthy — Login API (Task 17)
+StayHealthy - Login API (Task 17)
 ==================================
 
 Command:
