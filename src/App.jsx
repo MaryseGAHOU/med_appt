@@ -6,6 +6,7 @@ import { NotificationProvider } from './context/NotificationContext.jsx';
 import Home from './pages/Home.jsx';
 import Appointments from './pages/Appointments.jsx';
 import Reviews from './pages/Reviews.jsx';
+import Results from './pages/Results.jsx';
 import Sign_Up from './components/Sign_Up.jsx';
 import Login from './components/Login.jsx';
 import ProfileCard from './components/ProfileCard.jsx';
@@ -35,6 +36,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/results" element={<Results />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Sign_Up />} />

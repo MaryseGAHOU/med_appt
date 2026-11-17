@@ -1,26 +1,41 @@
 import { useEffect, useState } from 'react';
 import { addReview } from '../services/api.js';
+import { db } from '../services/db.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 
 /**
  * GiveReviews — review form (Task 11).
- * Includes the required "disabled after submission" behaviour: once a review
- * is successfully published, the whole form is disabled and a confirmation
- * is displayed.
+ *
+ * State model required by the rubric:
+ *  - `reviewData` holds the values typed by the patient (name, rating, comment).
+ *  - On submit the review is saved to state (`reviews`) and to the persistent
+ *    storage (localStorage via services/db.js).
+ *  - `report` stores the confirmation receipt; `report.serialNumber` is the
+ *    serial number of the published review. The conditional behaviour is driven
+ *    by `report.serialNumber`: while it is unset the form stays editable, and
+ *    once a review is published the whole form is disabled.
  */
 export default function GiveReviews() {
   const { user } = useAuth() ?? {};
   const { notify } = useNotification() ?? {};
-  const [form, setForm] = useState({ name: user?.name ?? '', rating: 5, comment: '' });
+  const [reviewData, setReviewData] = useState({
+    name: user?.name ?? '',
+    rating: 5,
+    comment: '',
+  });
+  const [reviews, setReviews] = useState([]);
+  const [report, setReport] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
-    setForm((f) => ({ ...f, name: user?.name ?? '' }));
+    setReviewData((data) => ({ ...data, name: user?.name ?? data.name }));
   }, [user]);
+
+  // The form is disabled as soon as a serial number has been issued.
+  const published = Boolean(report?.serialNumber);
 
   function validate(values) {
     const errs = {};
@@ -33,15 +48,28 @@ export default function GiveReviews() {
   async function handleSubmit(e) {
     e.preventDefault();
     setApiError(null);
-    const errs = validate(form);
+    const errs = validate(reviewData);
     setErrors(errs);
     if (Object.keys(errs).some((k) => errs[k])) return;
 
     setSubmitting(true);
     try {
-      await addReview({ name: form.name.trim(), rating: form.rating, comment: form.comment.trim() });
-      // Submission succeeded — the form is now disabled (Task 11 behaviour).
-      setSubmitted(true);
+      const saved = await addReview({
+        name: reviewData.name.trim(),
+        rating: reviewData.rating,
+        comment: reviewData.comment.trim(),
+      });
+
+      // 1. Save the review to state.
+      setReviews((list) => [...list, saved]);
+
+      // 2. Persist it in storage (localStorage).
+      db.saveReviews([...db.getReviews(), saved]);
+
+      // 3. Issue the report receipt — its serialNumber drives the
+      //    conditional rendering of the banner and disables the form.
+      setReport({ serialNumber: saved.id, publishedAt: new Date().toISOString() });
+
       notify('Thank you! Your review has been published.');
     } catch (err) {
       setApiError(err.message || 'Something went wrong. Please try again.');
@@ -66,21 +94,22 @@ export default function GiveReviews() {
         </p>
       )}
 
-      {submitted && (
+      {/* Conditional display driven by report.serialNumber */}
+      {report?.serialNumber && (
         <p className="banner banner-success" role="status">
-          Your review has been published — thank you! The form is now disabled.
+          Review {report.serialNumber} published — thank you! The form is now disabled.
         </p>
       )}
 
       {/* Disabling the fieldset disables every input and the submit button */}
-      <fieldset disabled={submitted || submitting} className="review-fieldset">
+      <fieldset disabled={published || submitting} className="review-fieldset">
         <div className="field">
           <label htmlFor="rev-name">Your name</label>
           <input
             id="rev-name"
             type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            value={reviewData.name}
+            onChange={(e) => setReviewData({ ...reviewData, name: e.target.value })}
             aria-invalid={errors.name ? true : undefined}
             aria-describedby={errors.name ? 'rev-name-error' : undefined}
           />
@@ -100,8 +129,8 @@ export default function GiveReviews() {
                   type="radio"
                   name="rating"
                   value={n}
-                  checked={form.rating === n}
-                  onChange={() => setForm({ ...form, rating: n })}
+                  checked={reviewData.rating === n}
+                  onChange={() => setReviewData({ ...reviewData, rating: n })}
                 />
                 <span aria-hidden="true">{n} ★</span>
                 <span className="visually-hidden">{`${n} out of 5 stars`}</span>
@@ -115,8 +144,8 @@ export default function GiveReviews() {
           <textarea
             id="rev-comment"
             rows={4}
-            value={form.comment}
-            onChange={(e) => setForm({ ...form, comment: e.target.value })}
+            value={reviewData.comment}
+            onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
             placeholder="How was your consultation?"
             aria-invalid={errors.comment ? true : undefined}
             aria-describedby={errors.comment ? 'rev-comment-error' : undefined}
@@ -129,7 +158,7 @@ export default function GiveReviews() {
         </div>
 
         <button type="submit" className="btn btn-block">
-          {submitting ? 'Publishing…' : submitted ? 'Review published' : 'Publish review'}
+          {submitting ? 'Publishing…' : published ? 'Review published' : 'Publish review'}
         </button>
       </fieldset>
     </form>

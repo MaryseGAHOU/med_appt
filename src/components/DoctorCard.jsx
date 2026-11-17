@@ -1,11 +1,20 @@
+import { useState } from 'react';
 import Stars from './Stars.jsx';
+import { cancelAppointment } from '../services/api.js';
+import { db } from '../services/db.js';
+import { useNotification } from '../context/NotificationContext.jsx';
 
 /**
- * DoctorCard — doctor profile card in the booking page.
- * Includes the appointment cancellation logic (Task 19): when the doctor has
- * an appointment booked, a "Cancel appointment" button removes it via the API.
+ * DoctorCard — doctor profile card in the booking page (Task 19).
+ * The full appointment cancellation logic lives in this component:
+ *  1. it calls the cancel API (with local-database fallback),
+ *  2. it updates the persistent storage (localStorage via services/db.js),
+ *  3. it updates the appointments state so the UI refreshes instantly.
  */
-export default function DoctorCard({ doctor, appointment, onBook, onCancel }) {
+export default function DoctorCard({ doctor, appointment, setAppointments, onBook }) {
+  const { notify } = useNotification() ?? {};
+  const [cancelling, setCancelling] = useState(false);
+
   const initials = doctor.name
     .replace(/^Dr\.?\s+/i, '')
     .split(' ')
@@ -13,6 +22,29 @@ export default function DoctorCard({ doctor, appointment, onBook, onCancel }) {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
+  // Cancel appointment logic — state and storage are updated right here.
+  async function handleCancel() {
+    if (!appointment || cancelling) return;
+    setCancelling(true);
+    try {
+      // 1. Ask the API to delete the appointment (falls back to the local db).
+      const result = await cancelAppointment(appointment.id);
+
+      // 2. Update the persistent storage (localStorage).
+      const remaining = db.getAppointments().filter((a) => a.id !== appointment.id);
+      db.saveAppointments(remaining);
+
+      // 3. Update the appointments state so the UI re-renders immediately.
+      setAppointments(remaining);
+
+      notify(result.message || 'Appointment cancelled successfully.');
+    } catch (err) {
+      notify(err.message || 'Cancellation failed. Please try again.', 'error');
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   return (
     <article className="card doctor-card">
@@ -38,17 +70,19 @@ export default function DoctorCard({ doctor, appointment, onBook, onCancel }) {
           <p className="booked-note">
             Booked: {appointment.date} at {appointment.time}
           </p>
-          {/* Cancellation logic — calls DELETE /api/appointments/:id through the data layer */}
-          <button type="button" className="btn btn-outline-dark btn-small" onClick={() => onCancel(appointment)}>
-            Cancel appointment
+          {/* Cancellation button — triggers the state + storage updates above */}
+          <button type="button" className="btn btn-outline-dark btn-small" onClick={handleCancel} disabled={cancelling}>
+            {cancelling ? 'Cancelling…' : 'Cancel appointment'}
           </button>
         </div>
       ) : (
-        <div className="doctor-actions">
-          <button type="button" className="btn btn-small" onClick={onBook}>
-            Book appointment
-          </button>
-        </div>
+        onBook && (
+          <div className="doctor-actions">
+            <button type="button" className="btn btn-small" onClick={onBook}>
+              Book appointment
+            </button>
+          </div>
+        )
       )}
     </article>
   );

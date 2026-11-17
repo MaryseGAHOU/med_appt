@@ -1,12 +1,12 @@
-StayHealthy - Registration API (Task 16)
-=========================================
+med_appt (StayHealthy) - Registration API (Task 16)
+====================================================
 
 Command:
 
-curl -X POST http://localhost:5000/api/register \
+curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"role":"patient","name":"Maryse GAHOU","email":"maryse.gahou@stayhealthy.example","phone":"+1 312 555 0142","password":"Stay1234"}'
 
 Output:
 
-{"message":"Registration successful. You can now log in.","user":{"id":"uhm3y6g8y","role":"patient","name":"Maryse GAHOU","email":"maryse.gahou@stayhealthy.example","phone":"+1 312 555 0142"}}
+{"message":"Registration successful. You can now log in.","authtoken":"dTQ5cTlsNG04OjE3OTQ5MTA3Nzc5MDM","user":{"id":"u49q9l4m8","role":"patient","name":"Maryse GAHOU","email":"maryse.gahou@stayhealthy.example","phone":"+1 312 555 0142"}}

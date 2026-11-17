@@ -40,7 +40,7 @@ async function tryApi(path, options) {
 
 export async function registerUser({ role, name, email, phone, password }) {
   try {
-    const data = await tryApi('/api/register', {
+    const data = await tryApi('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role, name, email, phone, password }),
@@ -76,7 +76,7 @@ async function registerLocal({ role, name, email, phone, password }) {
 
 export async function login({ email, password }) {
   try {
-    const data = await tryApi('/api/login', {
+    const data = await tryApi('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

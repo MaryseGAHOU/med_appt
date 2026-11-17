@@ -56,9 +56,13 @@ app.use((req, res, next) => {
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-/* ---------- Authentication ---------- */
+/* ---------- Authentication (/api/auth/*) ---------- */
 
-app.post('/api/register', (req, res) => {
+function makeAuthToken(user) {
+  return Buffer.from(`${user.id}:${Date.now()}`).toString('base64url');
+}
+
+app.post('/api/auth/register', (req, res) => {
   const db = loadDb();
   const { role, name, email, phone, password } = req.body || {};
   if (!name || !email || !password) {
@@ -79,13 +83,15 @@ app.post('/api/register', (req, res) => {
   };
   db.users.push(user);
   saveDb(db);
+  const authtoken = makeAuthToken(user);
   res.status(201).json({
     message: 'Registration successful. You can now log in.',
+    authtoken,
     user: { id: user.id, role: user.role, name: user.name, email: user.email, phone: user.phone },
   });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/auth/login', (req, res) => {
   const db = loadDb();
   const { email, password } = req.body || {};
   const user = db.users.find(
@@ -96,7 +102,7 @@ app.post('/api/login', (req, res) => {
   }
   res.json({
     message: 'Login successful.',
-    token: 'demo-' + uid(),
+    authtoken: makeAuthToken(user),
     user: { id: user.id, role: user.role, name: user.name, email: user.email, phone: user.phone },
   });
 });
@@ -143,3 +149,13 @@ app.post('/api/reviews', (req, res) => {
 app.listen(PORT, () => {
   console.log(`StayHealthy API running on http://localhost:${PORT}`);
 });
+
+/* ---------- Static production build (server/build) ---------- */
+
+const BUILD_DIR = path.join(__dirname, 'build');
+if (fs.existsSync(BUILD_DIR)) {
+  app.use(express.static(BUILD_DIR));
+  app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.join(BUILD_DIR, 'index.html'));
+  });
+}

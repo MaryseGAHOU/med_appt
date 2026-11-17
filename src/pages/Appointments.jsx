@@ -1,27 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import FindDoctorSearch from '../components/FindDoctorSearch.jsx';
 import DoctorCard from '../components/DoctorCard.jsx';
 import AppointmentForm from '../components/AppointmentForm.jsx';
 import AppointmentFormIC from '../components/AppointmentFormIC.jsx';
-import {
-  fetchDoctors,
-  fetchAppointments,
-  cancelAppointment,
-} from '../services/api.js';
-import { useNotification } from '../context/NotificationContext.jsx';
+import { fetchDoctors, fetchAppointments } from '../services/api.js';
 
 export default function Appointments() {
-  const { notify } = useNotification() ?? {};
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
-  const [filters, setFilters] = useState({ query: '', specialty: 'All' });
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const specialties = useMemo(
-    () => [...new Set(doctors.map((d) => d.specialty))],
-    [doctors]
-  );
+  const specialties = [...new Set(doctors.map((d) => d.specialty))];
 
   useEffect(() => {
     let active = true;
@@ -36,24 +26,8 @@ export default function Appointments() {
     };
   }, []);
 
-  const filtered = doctors.filter(
-    (d) =>
-      (filters.specialty === 'All' || d.specialty === filters.specialty) &&
-      d.name.toLowerCase().includes(filters.query.trim().toLowerCase())
-  );
-
   function handleBooked(record) {
     setAppointments((list) => [...list, record]);
-  }
-
-  async function handleCancel(appointment) {
-    try {
-      await cancelAppointment(appointment.id);
-      setAppointments((list) => list.filter((a) => a.id !== appointment.id));
-      notify('Appointment cancelled successfully.');
-    } catch (err) {
-      notify(err.message || 'Cancellation failed.', 'error');
-    }
   }
 
   return (
@@ -69,23 +43,23 @@ export default function Appointments() {
 
       <section className="section">
         <div className="container">
-          <FindDoctorSearch filters={filters} onFilterChange={setFilters} specialties={specialties} />
+          <FindDoctorSearch specialties={specialties} />
 
           {loading ? (
             <p className="muted">Loading doctors…</p>
           ) : (
             <div className="doctors-grid">
-              {filtered.map((doctor) => (
+              {doctors.map((doctor) => (
                 <DoctorCard
                   key={doctor.id}
                   doctor={doctor}
                   appointment={appointments.find((a) => a.doctorId === doctor.id)}
+                  setAppointments={setAppointments}
                   onBook={() => setSelectedDoctorId(doctor.id)}
-                  onCancel={handleCancel}
                 />
               ))}
-              {filtered.length === 0 && (
-                <p className="muted">No doctors match your search. Try different keywords.</p>
+              {doctors.length === 0 && (
+                <p className="muted">No doctors available right now.</p>
               )}
             </div>
           )}

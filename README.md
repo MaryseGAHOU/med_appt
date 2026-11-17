@@ -1,11 +1,12 @@
-# StayHealthy 🩺
+# med_appt 🩺
 
-**StayHealthy** is the front end of a nonprofit health platform that connects patients with trusted
-doctors — anytime, anywhere. It was built for the IBM *Front-End Development Capstone Project*
-(Coursera): patients can create an account, search doctors by name or specialty, book an
-appointment, cancel it, request an instant consultation and publish a review.
+**med_appt** (Medical Appointment Booking) is the GitHub repository of **StayHealthy**, the front
+end of a nonprofit health platform that connects patients with trusted doctors — anytime, anywhere.
+It was built for the IBM *Front-End Development Capstone Project* (Coursera): patients can create
+an account, search doctors by name or specialty, book an appointment, cancel it, request an instant
+consultation and publish a review.
 
-Live site: https://marysegahou.github.io/stayhealthy/
+Live site: https://marysegahou.github.io/med_appt/
 
 ---
 
@@ -38,7 +39,7 @@ npm run server
 # 4. Run the unit tests
 npm test
 
-# 5. Build the production bundle (output in dist/)
+# 5. Build the production bundle (output in server/build/)
 npm run build
 
 # 6. Preview the production build locally
@@ -48,9 +49,11 @@ npm run preview
 ### Project structure
 
 ```
-stayhealthy/
+med_appt/
 ├── index.html                  # SEO meta tags (title, description, keywords, OG)
-├── server/index.js             # Express API: register, login, doctors, appointments, reviews
+├── server/
+│   ├── index.js                # Express API: auth (register/login), doctors, appointments, reviews
+│   └── build/                  # Production build created inside the server folder
 ├── src/
 │   ├── main.jsx                # Entry point (HashRouter + AuthProvider + NotificationProvider)
 │   ├── App.jsx                 # Routes + Navbar + Notification + Footer
@@ -58,7 +61,7 @@ stayhealthy/
 │   │   ├── Navbar.jsx          # Navigation with logout functionality
 │   │   ├── Sign_Up.jsx         # Sign-up page invoking the registration API
 │   │   ├── Login.jsx           # Login page invoking the authentication API
-│   │   ├── FindDoctorSearch.jsx# Doctor search (name + specialty filter)
+│   │   ├── FindDoctorSearch.jsx# Doctor search → navigates to the /results route by specialty
 │   │   ├── DoctorCard.jsx      # Doctor card + appointment cancellation logic
 │   │   ├── AppointmentForm.jsx # Booking form: Name, Phone Number, Date, Time
 │   │   ├── AppointmentFormIC.jsx # Instant-consultation form: Name + Phone Number only
@@ -84,8 +87,8 @@ stayhealthy/
 
 | Method | Path | Description |
 | --- | --- | --- |
-| POST | `/api/register` | Create a new account |
-| POST | `/api/login` | Authenticate and receive a session token |
+| POST | `/api/auth/register` | Create a new account and receive an `authtoken` |
+| POST | `/api/auth/login` | Authenticate and receive an `authtoken` |
 | GET | `/api/doctors` | List available doctors |
 | GET/POST/DELETE | `/api/appointments` | List, book, cancel appointments |
 | GET/POST | `/api/reviews` | List, publish patient reviews |

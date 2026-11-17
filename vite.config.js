@@ -12,6 +12,12 @@ export default defineConfig({
       '/api': 'http://localhost:5000',
     },
   },
+  build: {
+    // The production build is created inside the server folder so the
+    // Express API can serve it (Task 13 — build folder inside server/).
+    outDir: 'server/build',
+    emptyOutDir: true,
+  },
   // Vitest configuration — unit tests for components and data services
   test: {
     environment: 'jsdom',
