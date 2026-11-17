@@ -1,0 +1,12 @@
+StayHealthy — Registration API (Task 16)
+=========================================
+
+Command:
+
+curl -X POST http://localhost:5000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"role":"patient","name":"Maryse GAHOU","email":"maryse.gahou@stayhealthy.example","phone":"+1 312 555 0142","password":"Stay1234"}'
+
+Output:
+
+{"message":"Registration successful. You can now log in.","user":{"id":"uhm3y6g8y","role":"patient","name":"Maryse GAHOU","email":"maryse.gahou@stayhealthy.example","phone":"+1 312 555 0142"}}

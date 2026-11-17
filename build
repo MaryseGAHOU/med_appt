@@ -1,0 +1,13 @@
+﻿
+> stayhealthy@1.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 55 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  1.68 kB[22m[1m[22m[2m Ôöé gzip:  0.73 kB[22m
+[2mdist/[22m[35massets/index-DSK_Hoa1.css  [39m[1m[2m 15.28 kB[22m[1m[22m[2m Ôöé gzip:  4.07 kB[22m
+[2mdist/[22m[36massets/index-BcRQuI1q.js   [39m[1m[2m207.49 kB[22m[1m[22m[2m Ôöé gzip: 64.09 kB[22m
+[32mÔ£ô built in 443ms[39m
